@@ -1,0 +1,14 @@
+# PowerShell artifacts
+*.ps1xml
+*.psm1
+*.psd1
+*.log
+*.ps1.bak
+
+# Windows artifacts
+Thumbs.db
+desktop.ini
+
+# Word temporary files
+~$*.docx
+~$*.doc
