@@ -1,64 +1,34 @@
 @echo off
-REM Convert-MarkdownToWord.bat - Wrapper for the PowerShell script
-REM This batch file makes it easier to run the PowerShell script without having to open PowerShell directly
+setlocal
 
-echo Markdown/TXT to Word Converter
-echo ----------------------------
-echo.
-
-IF "%~1"=="" (
-    echo Usage: Convert-MarkdownToWord.bat input.md [output.docx] [show]
-    echo       Convert-MarkdownToWord.bat input.txt [output.docx] [show]
-    echo.
-    echo Parameters:
-    echo   input.md/txt - Path to the input Markdown or TXT file (required)
-    echo   output.docx  - Path to the output Word document (optional, defaults to same name as input)
-    echo   show         - Add this parameter to show Word during conversion (optional)
-    echo.
-    echo Examples:
-    echo   Convert-MarkdownToWord.bat document.md
-    echo   Convert-MarkdownToWord.bat inventory.txt
-    echo   Convert-MarkdownToWord.bat document.md result.docx
-    echo   Convert-MarkdownToWord.bat document.txt result.docx show
-    goto :EOF
+REM Check if input file is provided
+if "%~1"=="" (
+    echo Usage: %~nx0 input.txt [output.docx]
+    echo Converts a text file with tables to a Word document.
+    exit /b 1
 )
 
-SET INPUT_FILE=%~1
-SET OUTPUT_FILE=%~2
-SET SHOW_WORD=%~3
+REM Set input file
+set "InputFile=%~1"
 
-REM If no output file specified, use the input file name with .docx extension
-IF "%OUTPUT_FILE%"=="" (
-    SET OUTPUT_FILE=%~dpn1.docx
+REM Determine output file name
+if "%~2"=="" (
+    set "OutputFile=%~n1.docx"
+) else (
+    set "OutputFile=%~2"
 )
 
-REM Prepare the PowerShell command
-SET PS_CMD=powershell.exe -ExecutionPolicy Bypass -NoProfile -Command "& '%~dp0Convert-MarkdownToWord.ps1' -InputFile '%INPUT_FILE%' -OutputFile '%OUTPUT_FILE%'"
+REM Display message
+echo Converting %InputFile% to %OutputFile%...
 
-REM Add ShowWord parameter if specified
-IF /I "%SHOW_WORD%"=="show" (
-    SET PS_CMD=%PS_CMD% -ShowWord
-)
+REM Run the PowerShell script
+powershell -ExecutionPolicy Bypass -File "%~dp0SimpleTableConverter.ps1" -InputFile "%InputFile%" -OutputFile "%OutputFile%"
 
-echo Input file:  %INPUT_FILE%
-echo Output file: %OUTPUT_FILE%
-IF /I "%SHOW_WORD%"=="show" (
-    echo Show Word:   Yes
-) ELSE (
-    echo Show Word:   No
-)
-echo.
-echo Converting...
-echo.
-
-REM Execute the PowerShell script
-%PS_CMD%
-
-echo.
-IF %ERRORLEVEL% EQU 0 (
-    echo Conversion completed successfully.
-) ELSE (
+REM Check result
+if %ERRORLEVEL% EQU 0 (
+    echo Conversion complete. Document saved at: %~f2
+) else (
     echo Conversion failed with error code %ERRORLEVEL%.
 )
 
-pause 
+exit /b %ERRORLEVEL% 

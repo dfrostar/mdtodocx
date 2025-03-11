@@ -1,79 +1,85 @@
-# Markdown and Text to Word Converter
+# Text to Word Document Converter
 
-A PowerShell script for converting Markdown and plain text files to properly formatted Microsoft Word documents, preserving tables, lists, and text styling.
+This utility converts text files with tables (pipe-delimited format) to Microsoft Word documents, preserving formatting, headings, and table structures.
 
-## Overview
+## Files
 
-This converter is a simple yet powerful tool designed to transform Markdown and plain text documents into properly formatted Microsoft Word documents. It handles tables, headings, lists, and basic formatting, making it ideal for generating professional documents from simple Markdown or TXT files.
+- `SimpleTableConverter.ps1` - The main PowerShell script for conversion
+- `Convert-TextToWord.bat` - Batch file wrapper for easier command-line use
 
 ## Features
 
-- **Multiple File Format Support**: Converts both Markdown (.md) and plain text (.txt) files
-- **Table Support**: Correctly formats and preserves tables in Word from both formats
-- **Heading Styles**: Applies appropriate Word heading styles to headings
-- **List Formatting**: Preserves both ordered and unordered lists
-- **Text Styling**: Maintains bold, italic, and other basic text formatting
-- **Parameterized Script**: Easy to use with customizable input and output paths
+- Converts Markdown-style headings (# Heading 1, ## Heading 2, etc.)
+- Properly formats pipe-delimited tables with header rows
+- Preserves plain text paragraphs
+- Auto-fits table columns to content
+- Applies proper styling (bold headers, table borders)
 
 ## Requirements
 
-- Windows operating system
-- PowerShell 5.1 or higher
+- Windows OS
 - Microsoft Word installed
+- PowerShell 5.1 or higher
 
-## Quick Start
+## Usage
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/dfrostar/mdtodocx.git
-   ```
+### PowerShell Method
 
-2. Run the script with your Markdown or TXT file:
-   ```powershell
-   .\Convert-MarkdownToWord.ps1 -InputFile "path\to\your\file.md" -OutputFile "path\to\output.docx"
-   ```
-   
-   Or use the batch file:
-   ```
-   .\Convert-MarkdownToWord.bat path\to\your\file.txt
-   ```
-
-## Examples
-
-Convert a Markdown file to Word:
 ```powershell
-.\Convert-MarkdownToWord.ps1 -InputFile "C:\Users\username\Documents\document.md" -OutputFile "C:\Users\username\Documents\document.docx"
+powershell -ExecutionPolicy Bypass -File SimpleTableConverter.ps1 -InputFile "your-input.txt" -OutputFile "your-output.docx"
 ```
 
-Convert a plain text file with tables to Word:
-```powershell
-.\Convert-MarkdownToWord.ps1 -InputFile "C:\Users\username\Documents\inventory.txt" -OutputFile "C:\Users\username\Documents\inventory.docx"
+Optional parameters:
+- `-ShowWord`: Shows the Word application during conversion
+
+### Batch File Method
+
+```
+Convert-TextToWord.bat input.txt output.docx
 ```
 
-Show the Word application during conversion (useful for debugging):
-```powershell
-.\Convert-MarkdownToWord.ps1 -InputFile "document.md" -OutputFile "document.docx" -ShowWord
+## Input File Format
+
+The input text file should use:
+
+- Headings with `#` symbols (e.g., `# Heading 1`, `## Heading 2`)
+- Tables in pipe-delimited format:
+
+```
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Data 1   | Data 2   | Data 3   |
 ```
 
-Using the batch file wrapper:
+## Example
+
+For the file `trust-asset-inventory.txt`:
+
 ```
-Convert-MarkdownToWord.bat inventory.txt
-Convert-MarkdownToWord.bat document.md output.docx show
+# Trust Asset Inventory
+
+## Financial Accounts
+| Account Type | Institution | Account Number |
+|--------------|-------------|----------------|
+| Checking     | First Bank  | 1234           |
+| Savings      | Credit Union| 5678           |
 ```
 
-## Documentation
+Convert it with:
 
-For detailed usage instructions, see the [Wiki](https://github.com/dfrostar/mdtodocx/wiki).
+```
+Convert-TextToWord.bat trust-asset-inventory.txt trust-asset-inventory.docx
+```
 
-## Limitations
+The resulting Word document will have a properly formatted heading hierarchy and tables with appropriate styling.
 
-- Complex nested structures may not convert perfectly
-- Limited support for advanced Markdown features like code blocks
-- Images are not currently supported
+## Troubleshooting
 
-## Contributing
+If you encounter issues:
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Ensure Microsoft Word is properly installed
+2. Check that your input file uses correct pipe-delimited table formatting
+3. Try running the PowerShell script directly to see detailed error messages
 
 ## License
 
