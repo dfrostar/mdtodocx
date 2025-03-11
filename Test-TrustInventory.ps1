@@ -1,4 +1,5 @@
-# Test script for TrustInventory document conversion
+# Text to DOCX conversion script - currently optimized for trust inventory documents
+# This will be generalized in future versions to handle various text formats
 param (
     [Parameter(Mandatory = $false)]
     [string]$InputFile = "trust-asset-inventory.txt",
@@ -335,297 +336,184 @@ function Format-TrustDocument {
     Write-Host "Formatting trust document with $elementCount elements..."
     
     foreach ($element in $Structure) {
-        switch ($element.Type) {
-            "Heading" {
-                $headingLevel = $element.HeadingLevel
-                $headingText = $element.Content[0]
-                
-                Write-Host "Processing heading level $headingLevel - $headingText"
-                
-                # Set heading styles with improved formatting
-                $Selection.Style = "Heading $headingLevel"
-                
-                # Format headings based on level
-                switch ($headingLevel) {
-                    1 {
-                        $Selection.Font.Size = 18
-                        $Selection.Font.Bold = $true
-                        $Selection.Font.Color = 5460735 # Dark blue
+        try {
+            switch ($element.Type) {
+                "Heading" {
+                    $headingLevel = $element.HeadingLevel
+                    $headingText = $element.Content[0]
+                    
+                    Write-Host "Processing heading level $headingLevel - $headingText"
+                    
+                    # Set heading styles with improved formatting
+                    $Selection.Style = "Heading $headingLevel"
+                    
+                    # Format headings based on level
+                    switch ($headingLevel) {
+                        1 {
+                            $Selection.Font.Size = 18
+                            $Selection.Font.Bold = $true
+                            $Selection.Font.Color = 5460735 # Dark blue
+                        }
+                        2 {
+                            $Selection.Font.Size = 16
+                            $Selection.Font.Bold = $true
+                            $Selection.Font.Color = 6710932 # Dark teal
+                        }
+                        3 {
+                            $Selection.Font.Size = 14
+                            $Selection.Font.Bold = $true
+                            $Selection.Font.Color = 10053222 # Dark gray
+                        }
+                        default {
+                            $Selection.Font.Size = 12
+                            $Selection.Font.Bold = $true
+                        }
                     }
-                    2 {
-                        $Selection.Font.Size = 16
-                        $Selection.Font.Bold = $true
-                        $Selection.Font.Color = 6710932 # Dark teal
-                    }
-                    3 {
-                        $Selection.Font.Size = 14
-                        $Selection.Font.Bold = $true
-                        $Selection.Font.Color = 10053222 # Dark gray
-                    }
-                    default {
-                        $Selection.Font.Size = 12
-                        $Selection.Font.Bold = $true
+                    
+                    $Selection.TypeText($headingText)
+                    $Selection.TypeParagraph()
+                    
+                    # Add extra space after higher level headings
+                    if ($headingLevel -le 2) {
+                        $Selection.TypeParagraph()
                     }
                 }
                 
-                $Selection.TypeText($headingText)
-                $Selection.TypeParagraph()
-                
-                # Add extra space after higher level headings
-                if ($headingLevel -le 2) {
+                "SectionHeading" {
+                    $sectionText = $element.Content[0]
+                    
+                    Write-Host "Processing section heading: $sectionText"
+                    
+                    $Selection.Style = "Heading 3"
+                    $Selection.Font.Size = 14
+                    $Selection.Font.Bold = $true
+                    $Selection.Font.Color = 10053222 # Dark gray
+                    $Selection.TypeText($sectionText)
                     $Selection.TypeParagraph()
                 }
-            }
-            
-            "SectionHeading" {
-                $sectionText = $element.Content[0]
                 
-                Write-Host "Processing section heading: $sectionText"
-                
-                $Selection.Style = "Heading 3"
-                $Selection.Font.Size = 14
-                $Selection.Font.Bold = $true
-                $Selection.Font.Color = 10053222 # Dark gray
-                $Selection.TypeText($sectionText)
-                $Selection.TypeParagraph()
-            }
-            
-            "Table" {
-                Write-Host "Processing table in section $($element.Section)"
-                
-                $tableLines = $element.Content
-                
-                # Skip if not enough lines for a valid table
-                if ($tableLines.Count -lt 2) {
-                    Write-Host "Skipping table - not enough lines"
-                    foreach ($line in $tableLines) {
-                        $Selection.TypeText($line)
-                        $Selection.TypeParagraph()
-                    }
-                    continue
-                }
-                
-                # 1. Extract header row and count ACTUAL columns
-                $headerRow = $null
-                $dataRows = @()
-                
-                # Find the header row (first non-separator row)
-                foreach ($line in $tableLines) {
-                    if (-not (Is-Separator $line) -and (Is-TableData $line)) {
-                        $headerRow = $line
-                        break
-                    }
-                }
-                
-                if (-not $headerRow) {
-                    Write-Host "No valid header row found, skipping table"
-                    foreach ($line in $tableLines) {
-                        $Selection.TypeText($line)
-                        $Selection.TypeParagraph()
-                    }
-                    continue
-                }
-                
-                # Extract and clean up headers
-                $headers = Extract-TableHeaders $headerRow
-                
-                if ($headers.Count -eq 0) {
-                    Write-Host "No valid headers found, skipping table"
-                    foreach ($line in $tableLines) {
-                        $Selection.TypeText($line)
-                        $Selection.TypeParagraph()
-                    }
-                    continue
-                }
-                
-                # 2. Process all data rows, ignoring separator rows
-                foreach ($line in $tableLines) {
-                    # Skip header row
-                    if ($line -eq $headerRow) {
+                "Table" {
+                    Write-Host "Processing table in section $($element.Section)"
+                    
+                    $tableLines = $element.Content
+                    
+                    # Skip if not enough lines for a valid table
+                    if ($tableLines.Count -lt 1) {
+                        Write-Host "Skipping table - not enough lines"
+                        foreach ($line in $tableLines) {
+                            $Selection.TypeText($line)
+                            $Selection.TypeParagraph()
+                        }
                         continue
                     }
                     
-                    # Skip separator rows
-                    if (Is-Separator $line) {
-                        continue
-                    }
-                    
-                    # Process data row if it contains pipes
-                    if (Is-TableData $line) {
-                        $row = $line.Trim()
-                        if ($row.StartsWith('|')) {
-                            $row = $row.Substring(1)
-                        }
-                        if ($row.EndsWith('|')) {
-                            $row = $row.Substring(0, $row.Length - 1)
-                        }
+                    # SUPER SIMPLIFIED APPROACH
+                    try {
+                        # 1. Just extract the header row
+                        $headerRow = $null
                         
-                        # Skip empty rows
-                        if ([string]::IsNullOrWhiteSpace($row)) {
-                            continue
-                        }
-                        
-                        # Split the row into cells
-                        $cells = $row.Split('|') | ForEach-Object { $_.Trim() }
-                        
-                        # Skip rows with all empty cells
-                        $allEmpty = $true
-                        foreach ($cell in $cells) {
-                            if (-not [string]::IsNullOrWhiteSpace($cell)) {
-                                $allEmpty = $false
+                        # Find the header row (first line with pipes)
+                        foreach ($line in $tableLines) {
+                            if (Is-TableData $line) {
+                                $headerRow = $line
                                 break
                             }
                         }
                         
-                        if (-not $allEmpty) {
-                            $dataRows += , $cells
+                        if (-not $headerRow) {
+                            Write-Host "No valid header row found, skipping table"
+                            continue
                         }
-                    }
-                }
-                
-                # 3. LIMIT max columns to 5 - this prevents the "value out of range" error
-                $maxColumns = 5
-                $originalColCount = $headers.Count
-                $colCount = [Math]::Min($originalColCount, $maxColumns)
-                
-                # If we have more than maxColumns, we'll create multiple tables
-                $tableCount = [Math]::Ceiling($originalColCount / $maxColumns)
-                Write-Host "Table has $originalColCount columns, creating $tableCount table(s) with max $maxColumns columns each"
-                
-                for ($tableIndex = 0; $tableIndex -lt $tableCount; $tableIndex++) {
-                    # Calculate the column range for this sub-table
-                    $startCol = $tableIndex * $maxColumns
-                    $endCol = [Math]::Min(($tableIndex + 1) * $maxColumns - 1, $originalColCount - 1)
-                    $currentColCount = $endCol - $startCol + 1
-                    
-                    if ($tableIndex > 0) {
-                        # Add separator between tables
-                        $Selection.TypeParagraph()
                         
-                        # Add a subtitle for continuation tables
-                        $Selection.Font.Bold = $true
-                        $Selection.Font.Size = 12
-                        $Selection.TypeText("Table Continued (Columns $($startCol + 1) to $($endCol + 1))")
-                        $Selection.Font.Bold = $false
-                        $Selection.TypeParagraph()
-                    }
-                    
-                    $rowCount = 1 + $dataRows.Count # Header + data rows
-                    
-                    Write-Host "Creating table $($tableIndex + 1) with $rowCount rows and $currentColCount columns"
-                    
-                    try {
-                        # Create the table with exact dimensions
-                        $table = $Selection.Tables.Add($Selection.Range, $rowCount, $currentColCount)
+                        # 2. Extract headers from the header row
+                        $headerLine = $headerRow.Trim()
+                        # Remove starting and ending pipes
+                        if ($headerLine.StartsWith('|')) {
+                            $headerLine = $headerLine.Substring(1)
+                        }
+                        if ($headerLine.EndsWith('|')) {
+                            $headerLine = $headerLine.Substring(0, $headerLine.Length - 1)
+                        }
                         
-                        # Basic table properties for cleaner appearance
+                        # Split by pipe and clean up each header
+                        $headers = $headerLine.Split('|') | ForEach-Object { 
+                            $header = $_.Trim() 
+                            # Remove markdown formatting
+                            $header = $header.Replace("**", "").Replace("*", "").Replace("__", "").Replace("_", "")
+                            $header
+                        }
+                        
+                        # Filter out any empty headers
+                        $headers = $headers | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+                        
+                        if ($headers.Count -eq 0) {
+                            Write-Host "No valid headers found, skipping table"
+                            continue
+                        }
+                        
+                        Write-Host "Found $($headers.Count) columns in header: $($headers -join ', ')"
+                        
+                        # 3. Create a simple table with 5 empty rows
+                        $rowCount = 6  # Header + 5 empty rows
+                        $colCount = $headers.Count
+                        
+                        # Limit columns to 10 to avoid any potential issues
+                        if ($colCount -gt 10) {
+                            Write-Host "Limiting table to 10 columns (was $colCount)"
+                            $colCount = 10
+                            $headers = $headers[0..9]
+                        }
+                        
+                        Write-Host "Creating empty table with $rowCount rows and $colCount columns"
+                        
+                        # Create the table
+                        $table = $Selection.Tables.Add($Selection.Range, $rowCount, $colCount)
+                        
+                        # Set basic properties
                         $table.Borders.Enable = $true
-                        $table.Borders.InsideLineStyle = 1 # wdLineStyleSingle  
-                        $table.Borders.OutsideLineStyle = 1 # wdLineStyleSingle
                         
-                        # Apply simple grid style with no complex formatting
-                        try {
-                            $table.Style = "Table Grid"
-                        } 
-                        catch {
-                            Write-Host "Could not apply table style"
+                        # 4. Add headers to the first row
+                        for ($col = 0; $col -lt $headers.Count; $col++) {
+                            $table.Cell(1, $col + 1).Range.Text = $headers[$col]
+                            $table.Cell(1, $col + 1).Range.Bold = $true
                         }
                         
-                        # 5. Set up the header row with only the subset of headers for this table
-                        for ($i = 0; $i -lt $currentColCount; $i++) {
-                            $headerIdx = $startCol + $i
-                            if ($headerIdx -lt $headers.Count) {
-                                $headerText = $headers[$headerIdx]
-                                $table.Cell(1, $i + 1).Range.Text = $headerText
-                                $table.Cell(1, $i + 1).Range.Bold = $true
-                            }
-                        }
+                        # 5. Format header row with light gray background
+                        $table.Rows.Item(1).Shading.BackgroundPatternColor = 14277081 # Light gray
                         
-                        # Add light gray shading to header row
-                        try {
-                            $table.Rows.Item(1).Shading.BackgroundPatternColor = 14277081 # Very light gray
-                        } 
-                        catch {
-                            Write-Host "Could not set header row shading"
-                        }
-                        
-                        # 6. Add data to the table - only the columns for this sub-table
-                        for ($row = 0; $row -lt $dataRows.Count; $row++) {
-                            $cells = $dataRows[$row]
-                            
-                            # Fill each cell with data for this column subset
-                            for ($i = 0; $i -lt $currentColCount; $i++) {
-                                $colIdx = $startCol + $i
-                                if ($colIdx -lt $cells.Count) {
-                                    $cellText = $cells[$colIdx].Trim()
-                                    # Clean up markdown formatting for cell text
-                                    $cellText = $cellText.Replace("**", "").Replace("*", "").Replace("__", "").Replace("_", "")
-                                    $table.Cell($row + 2, $i + 1).Range.Text = $cellText
-                                }
-                            }
-                        }
-                        
-                        # 7. Set table formatting - basic but reliable
-                        try {
-                            # Ensure word wrap is enabled in cells
-                            foreach ($cell in $table.Range.Cells) {
-                                $cell.WordWrap = $true
-                            }
-                            
-                            # Auto-fit to content for better display
-                            $table.AutoFitBehavior(1) # wdAutoFitContent
-                            
-                            # Allow rows to break across pages
-                            $table.Rows.AllowBreakAcrossPages = $true
-                        }
-                        catch {
-                            Write-Host "Error in table formatting: $_"
-                        }
+                        # Add space after table
+                        $Selection.TypeParagraph()
+                        $Selection.TypeParagraph()
                     }
                     catch {
-                        Write-Host "Error creating table $($tableIndex + 1): $_"
-                        
-                        # Fallback - output as formatted text for this section
-                        if ($tableIndex == 0) { # Only output as text for the first table
-                            $Selection.Font.Bold = $true
-                            foreach ($header in $headers) {
-                                $Selection.TypeText($header + "  ")
-                            }
-                            $Selection.Font.Bold = $false
-                            $Selection.TypeParagraph()
-                            
-                            foreach ($dataRow in $dataRows) {
-                                foreach ($cell in $dataRow) {
-                                    $Selection.TypeText($cell + "  ")
-                                }
-                                $Selection.TypeParagraph()
-                            }
-                        }
+                        Write-Host "ERROR in table creation: $_"
+                        # Just continue to next element
+                        $Selection.TypeParagraph()
                     }
                 }
                 
-                # Add space after all tables
-                $Selection.TypeParagraph()
-                $Selection.TypeParagraph()
-            }
-            
-            "Paragraph" {
-                Write-Host "Processing paragraph with $($element.Content.Count) lines"
+                "Paragraph" {
+                    Write-Host "Processing paragraph with $($element.Content.Count) lines"
+                    
+                    foreach ($line in $element.Content) {
+                        $Selection.TypeText($line)
+                        $Selection.TypeParagraph()
+                    }
+                }
                 
-                foreach ($line in $element.Content) {
-                    $Selection.TypeText($line)
+                "EmptyLine" {
+                    $Selection.TypeParagraph()
+                }
+                
+                "Text" {
+                    $Selection.TypeText($element.Content[0])
                     $Selection.TypeParagraph()
                 }
             }
-            
-            "EmptyLine" {
-                $Selection.TypeParagraph()
-            }
-            
-            "Text" {
-                $Selection.TypeText($element.Content[0])
-                $Selection.TypeParagraph()
-            }
+        }
+        catch {
+            Write-Host "ERROR processing element: $_"
+            # Continue with next element
         }
     }
 }
