@@ -48,7 +48,7 @@ function Is-TableData {
     # Real tables in trust documents typically have multiple pipe characters
     if ($Line -match '\|.*\|.*\|') {
         $pipeCount = ($Line.ToCharArray() | Where-Object { $_ -eq '|' } | Measure-Object).Count
-        if ($pipeCount -ge 3) {
+        if ($pipeCount -ge 2) {
             return $true
         }
     }
@@ -121,7 +121,7 @@ function Close-WordObjects {
     [System.GC]::WaitForPendingFinalizers()
 }
 
-# Extract table headers function
+# Extract table headers function with improved parsing
 function Extract-TableHeaders {
     param ([string]$HeaderLine)
     
@@ -139,20 +139,20 @@ function Extract-TableHeaders {
     $headers = $headerLine.Split('|') | ForEach-Object { $_.Trim() }
     
     # Filter out empty headers and ensure we have valid headers
-    $headers = $headers | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    
-    # If we have no valid headers, try to create placeholder headers
-    if ($headers.Count -eq 0) {
-        $pipeCount = ($HeaderLine.ToCharArray() | Where-Object { $_ -eq '|' } | Measure-Object).Count
-        if ($pipeCount -gt 0) {
-            $headers = @()
-            for ($i = 1; $i -le ($pipeCount + 1); $i++) {
-                $headers += "Column $i"
-            }
+    $validHeaders = @()
+    foreach ($header in $headers) {
+        if (-not [string]::IsNullOrWhiteSpace($header)) {
+            # Clean up any markdown formatting symbols - fixed regex patterns
+            $cleanHeader = $header.Replace("**", "").Replace("*", "").Replace("__", "").Replace("_", "")
+            $validHeaders += $cleanHeader
+        }
+        else {
+            # Use column placeholder for empty headers
+            $validHeaders += "Column"
         }
     }
     
-    return $headers
+    return $validHeaders
 }
 
 # Function to analyze the document structure
@@ -405,8 +405,28 @@ function Format-TrustDocument {
                     continue
                 }
                 
-                # Extract header row
-                $headerRow = $tableLines[0]
+                # 1. Extract header row and count ACTUAL columns
+                $headerRow = $null
+                $dataRows = @()
+                
+                # Find the header row (first non-separator row)
+                foreach ($line in $tableLines) {
+                    if (-not (Is-Separator $line) -and (Is-TableData $line)) {
+                        $headerRow = $line
+                        break
+                    }
+                }
+                
+                if (-not $headerRow) {
+                    Write-Host "No valid header row found, skipping table"
+                    foreach ($line in $tableLines) {
+                        $Selection.TypeText($line)
+                        $Selection.TypeParagraph()
+                    }
+                    continue
+                }
+                
+                # Extract and clean up headers
                 $headers = Extract-TableHeaders $headerRow
                 
                 if ($headers.Count -eq 0) {
@@ -418,34 +438,37 @@ function Format-TrustDocument {
                     continue
                 }
                 
-                # Process data rows (skip separator rows)
-                $dataRows = @()
-                for ($i = 1; $i -lt $tableLines.Count; $i++) {
-                    $row = $tableLines[$i]
+                # 2. Process all data rows, ignoring separator rows
+                foreach ($line in $tableLines) {
+                    # Skip header row
+                    if ($line -eq $headerRow) {
+                        continue
+                    }
                     
                     # Skip separator rows
-                    if (Is-Separator $row) {
+                    if (Is-Separator $line) {
                         continue
                     }
                     
-                    # Process data row
-                    $row = $row.Trim()
-                    if ($row.StartsWith('|')) {
-                        $row = $row.Substring(1)
-                    }
-                    if ($row.EndsWith('|')) {
-                        $row = $row.Substring(0, $row.Length - 1)
-                    }
-                    
-                    # Skip empty rows
-                    if ([string]::IsNullOrWhiteSpace($row)) {
-                        continue
-                    }
-                    
-                    $cells = $row.Split('|') | ForEach-Object { $_.Trim() }
-                    
-                    # Skip rows with empty cells
-                    if ($cells.Count -gt 0) {
+                    # Process data row if it contains pipes
+                    if (Is-TableData $line) {
+                        $row = $line.Trim()
+                        if ($row.StartsWith('|')) {
+                            $row = $row.Substring(1)
+                        }
+                        if ($row.EndsWith('|')) {
+                            $row = $row.Substring(0, $row.Length - 1)
+                        }
+                        
+                        # Skip empty rows
+                        if ([string]::IsNullOrWhiteSpace($row)) {
+                            continue
+                        }
+                        
+                        # Split the row into cells
+                        $cells = $row.Split('|') | ForEach-Object { $_.Trim() }
+                        
+                        # Skip rows with all empty cells
                         $allEmpty = $true
                         foreach ($cell in $cells) {
                             if (-not [string]::IsNullOrWhiteSpace($cell)) {
@@ -460,74 +483,128 @@ function Format-TrustDocument {
                     }
                 }
                 
-                # Determine the real number of rows and columns
-                $rowCount = 1 + $dataRows.Count # Header + data rows
-                $colCount = [Math]::Min($headers.Count, 6) # Limit to 6 columns to avoid display issues
+                # 3. LIMIT max columns to 5 - this prevents the "value out of range" error
+                $maxColumns = 5
+                $originalColCount = $headers.Count
+                $colCount = [Math]::Min($originalColCount, $maxColumns)
                 
-                # Only create a table if we have headers and data
-                if ($rowCount -lt 2 -or $colCount -lt 1) {
-                    Write-Host "Skipping table - not enough data"
-                    foreach ($line in $tableLines) {
-                        $Selection.TypeText($line)
+                # If we have more than maxColumns, we'll create multiple tables
+                $tableCount = [Math]::Ceiling($originalColCount / $maxColumns)
+                Write-Host "Table has $originalColCount columns, creating $tableCount table(s) with max $maxColumns columns each"
+                
+                for ($tableIndex = 0; $tableIndex -lt $tableCount; $tableIndex++) {
+                    # Calculate the column range for this sub-table
+                    $startCol = $tableIndex * $maxColumns
+                    $endCol = [Math]::Min(($tableIndex + 1) * $maxColumns - 1, $originalColCount - 1)
+                    $currentColCount = $endCol - $startCol + 1
+                    
+                    if ($tableIndex > 0) {
+                        # Add separator between tables
+                        $Selection.TypeParagraph()
+                        
+                        # Add a subtitle for continuation tables
+                        $Selection.Font.Bold = $true
+                        $Selection.Font.Size = 12
+                        $Selection.TypeText("Table Continued (Columns $($startCol + 1) to $($endCol + 1))")
+                        $Selection.Font.Bold = $false
                         $Selection.TypeParagraph()
                     }
-                    continue
-                }
-                
-                Write-Host "Creating table with $rowCount rows and $colCount columns"
-                
-                # COMPLETELY NEW TABLE APPROACH
-                # Create a basic table with simple formatting
-                $table = $Selection.Tables.Add($Selection.Range, $rowCount, $colCount)
-                
-                # Basic table properties
-                $table.Borders.Enable = $true
-                $table.Borders.OutsideLineStyle = 1 # wdLineStyleSingle
-                $table.Borders.InsideLineStyle = 1 # wdLineStyleSingle
-                
-                # Try a very basic table style - no fancy formatting
-                try {
-                    $table.Style = "Table Grid"
-                    $table.ApplyStyleHeadingRows = $true
-                } catch {
-                    Write-Host "Could not apply table style"
-                }
-                
-                # Insert headers (first max 6 only)
-                for ($col = 0; $col -lt $colCount; $col++) {
-                    $headerText = $headers[$col].Trim()
-                    if (-not [string]::IsNullOrWhiteSpace($headerText)) {
-                        $table.Cell(1, $col + 1).Range.Text = $headerText
-                    }
-                }
-                
-                # Bold the header row with light shading
-                $table.Rows.Item(1).Range.Bold = $true
-                try {
-                    $table.Rows.Item(1).Shading.BackgroundPatternColor = 14277081 # Very light gray
-                } catch {
-                    Write-Host "Could not set header background color"
-                }
-                
-                # Insert data rows (first 5 rows only to avoid cluttering)
-                $maxRows = [Math]::Min($dataRows.Count, 5)
-                for ($row = 0; $row -lt $maxRows; $row++) {
-                    $cells = $dataRows[$row]
                     
-                    for ($col = 0; $col -lt $colCount; $col++) {
-                        if ($col -lt $cells.Count) {
-                            $cellText = $cells[$col].Trim()
-                            if (-not [string]::IsNullOrWhiteSpace($cellText)) {
-                                $table.Cell($row + 2, $col + 1).Range.Text = $cellText
+                    $rowCount = 1 + $dataRows.Count # Header + data rows
+                    
+                    Write-Host "Creating table $($tableIndex + 1) with $rowCount rows and $currentColCount columns"
+                    
+                    try {
+                        # Create the table with exact dimensions
+                        $table = $Selection.Tables.Add($Selection.Range, $rowCount, $currentColCount)
+                        
+                        # Basic table properties for cleaner appearance
+                        $table.Borders.Enable = $true
+                        $table.Borders.InsideLineStyle = 1 # wdLineStyleSingle  
+                        $table.Borders.OutsideLineStyle = 1 # wdLineStyleSingle
+                        
+                        # Apply simple grid style with no complex formatting
+                        try {
+                            $table.Style = "Table Grid"
+                        } 
+                        catch {
+                            Write-Host "Could not apply table style"
+                        }
+                        
+                        # 5. Set up the header row with only the subset of headers for this table
+                        for ($i = 0; $i -lt $currentColCount; $i++) {
+                            $headerIdx = $startCol + $i
+                            if ($headerIdx -lt $headers.Count) {
+                                $headerText = $headers[$headerIdx]
+                                $table.Cell(1, $i + 1).Range.Text = $headerText
+                                $table.Cell(1, $i + 1).Range.Bold = $true
+                            }
+                        }
+                        
+                        # Add light gray shading to header row
+                        try {
+                            $table.Rows.Item(1).Shading.BackgroundPatternColor = 14277081 # Very light gray
+                        } 
+                        catch {
+                            Write-Host "Could not set header row shading"
+                        }
+                        
+                        # 6. Add data to the table - only the columns for this sub-table
+                        for ($row = 0; $row -lt $dataRows.Count; $row++) {
+                            $cells = $dataRows[$row]
+                            
+                            # Fill each cell with data for this column subset
+                            for ($i = 0; $i -lt $currentColCount; $i++) {
+                                $colIdx = $startCol + $i
+                                if ($colIdx -lt $cells.Count) {
+                                    $cellText = $cells[$colIdx].Trim()
+                                    # Clean up markdown formatting for cell text
+                                    $cellText = $cellText.Replace("**", "").Replace("*", "").Replace("__", "").Replace("_", "")
+                                    $table.Cell($row + 2, $i + 1).Range.Text = $cellText
+                                }
+                            }
+                        }
+                        
+                        # 7. Set table formatting - basic but reliable
+                        try {
+                            # Ensure word wrap is enabled in cells
+                            foreach ($cell in $table.Range.Cells) {
+                                $cell.WordWrap = $true
+                            }
+                            
+                            # Auto-fit to content for better display
+                            $table.AutoFitBehavior(1) # wdAutoFitContent
+                            
+                            # Allow rows to break across pages
+                            $table.Rows.AllowBreakAcrossPages = $true
+                        }
+                        catch {
+                            Write-Host "Error in table formatting: $_"
+                        }
+                    }
+                    catch {
+                        Write-Host "Error creating table $($tableIndex + 1): $_"
+                        
+                        # Fallback - output as formatted text for this section
+                        if ($tableIndex == 0) { # Only output as text for the first table
+                            $Selection.Font.Bold = $true
+                            foreach ($header in $headers) {
+                                $Selection.TypeText($header + "  ")
+                            }
+                            $Selection.Font.Bold = $false
+                            $Selection.TypeParagraph()
+                            
+                            foreach ($dataRow in $dataRows) {
+                                foreach ($cell in $dataRow) {
+                                    $Selection.TypeText($cell + "  ")
+                                }
+                                $Selection.TypeParagraph()
                             }
                         }
                     }
                 }
                 
-                # Auto-fit to window
-                $table.AutoFitBehavior(2) # wdAutoFitWindow
-                
-                # Add space after table
+                # Add space after all tables
                 $Selection.TypeParagraph()
                 $Selection.TypeParagraph()
             }
@@ -577,22 +654,26 @@ try {
     $word = Initialize-WordApplication -ShowWord:$ShowWord
     $doc = $word.Documents.Add()
     
-    # Set document properties for better formatting
+    # Set up document for optimal readability
     $doc.PageSetup.LeftMargin = 36 # 0.5 inch in points
     $doc.PageSetup.RightMargin = 36
     $doc.PageSetup.TopMargin = 72
     $doc.PageSetup.BottomMargin = 72
     
-    # Set document to landscape for wider tables
+    # Use landscape orientation for wider tables
     $doc.PageSetup.Orientation = 1 # wdOrientLandscape
     
-    # Use a reliable font
-    $word.Selection.Font.Name = "Arial"
+    # Set a clean, readable font
+    $word.Selection.Font.Name = "Calibri"
     $word.Selection.Font.Size = 11
     
-    # Set the page background color to white to ensure good contrast
-    $doc.Background.Fill.Visible = $true
-    $doc.Background.Fill.ForeColor.RGB = 16777215 # White
+    # Ensure white background for good contrast
+    try {
+        $doc.Background.Fill.Visible = $true
+        $doc.Background.Fill.ForeColor.RGB = 16777215 # White
+    } catch {
+        Write-Host "Could not set document background"
+    }
     
     $selection = $word.Selection
     
