@@ -68,8 +68,11 @@ MIT License
 
 ## Files
 
-- `SimpleTableConverter.ps1` - The main PowerShell script for conversion
-- `Convert-TextToWord.bat` - Batch file wrapper for easier command-line use
+- `SemanticDocConverter.ps1` - General-purpose document converter with semantic understanding
+- `TrustDocConverter.ps1` - Specialized converter for trust inventory documents
+- `Convert-Semantic.bat` - Batch wrapper for the semantic converter
+- `Convert-TrustInventory.bat` - Batch wrapper for the trust document converter
+- `run-examples.bat` - Script to run all examples at once
 
 ## Input File Format
 
@@ -86,25 +89,32 @@ The input text file should use:
 
 ## Example
 
-For the file `trust-asset-inventory.txt`:
+For the file `examples/sample-trust-inventory.txt`:
 
 ```
 # Trust Asset Inventory
 
-## Financial Accounts
-| Account Type | Institution | Account Number |
-|--------------|-------------|----------------|
-| Checking     | First Bank  | 1234           |
-| Savings      | Credit Union| 5678           |
+Real Estate Properties
+
+| Property Address | Type | Value | Notes |
+| 123 Main St, Anytown, USA | Primary Residence | $500,000 | Jointly owned with spouse |
 ```
 
 Convert it with:
 
 ```
-Convert-TextToWord.bat trust-asset-inventory.txt trust-asset-inventory.docx
+Convert-TrustInventory.bat examples\sample-trust-inventory.txt
 ```
 
-The resulting Word document will have a properly formatted heading hierarchy and tables with appropriate styling.
+The resulting Word document will have properly formatted headings, sections, and tables with appropriate styling.
+
+## Examples
+
+Check out the `examples` directory for sample input and output files:
+
+- `sample-document.md` - General document with various formatting elements
+- `sample-trust-inventory.txt` - Sample trust inventory document
+- `run-examples.bat` - Batch script to convert all examples at once
 
 ## Troubleshooting
 

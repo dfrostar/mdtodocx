@@ -1,0 +1,87 @@
+# Trust Asset Inventory
+
+This document provides a comprehensive inventory of all assets held in the Sample Family Trust.
+
+Real Estate Properties
+
+| Property Address | Type | Value | Notes |
+| 123 Main St, Anytown, USA | Primary Residence | $500,000 | Jointly owned with spouse |
+| 456 Beach Ave, Coastville, USA | Vacation Home | $350,000 | Mortgage of $150,000 remaining |
+| 789 Oak Lane, Mountainview, USA | Rental Property | $275,000 | Income: $2,000/month |
+
+Financial Accounts
+
+| Institution | Account Type | Account Number | Value | Beneficiary |
+| First National Bank | Checking | xxx-xxx-1234 | $25,000 | N/A |
+| Investment Firm | Brokerage | yyy-yyyy-5678 | $250,000 | Spouse |
+| Credit Union | Savings | zzz-zzz-9012 | $75,000 | Children |
+
+Retirement Accounts
+
+| Institution | Account Type | Account Number | Value | Beneficiary |
+| Employer Plan | 401(k) | 401k-xxx-1234 | $425,000 | Spouse |
+| Investment Firm | Traditional IRA | IRA-yyy-5678 | $150,000 | Children |
+| Investment Firm | Roth IRA | Roth-zzz-9012 | $85,000 | Children |
+
+Vehicles
+
+| Vehicle Description | Year | Value | Notes |
+| Toyota Highlander | 2023 | $45,000 | Owned outright |
+| Honda Accord | 2021 | $28,000 | Loan balance: $15,000 |
+| RV Camper | 2018 | $60,000 | Seasonal use |
+
+Life Insurance Policies
+
+| Company | Policy Type | Policy Number | Death Benefit | Beneficiary |
+| Life Insurance Co. | Term Life | TL-12345 | $500,000 | Spouse |
+| Insurance Group | Whole Life | WL-67890 | $250,000 | Children |
+| Employer Plan | Group Life | GL-54321 | $200,000 | Spouse |
+
+Business Interests
+
+| Business Name | Ownership % | Estimated Value | Notes |
+| ABC Consulting, LLC | 100% | $150,000 | Sole proprietorship |
+| XYZ Partners | 25% | $250,000 | Partnership with buy-sell agreement |
+| Family Rentals, LLC | 50% | $300,000 | Co-owned with sibling |
+
+Valuable Personal Property
+
+| Item | Location | Estimated Value | Notes |
+| Antique Furniture Collection | Primary Residence | $25,000 | Family heirlooms |
+| Jewelry Collection | Safe Deposit Box | $35,000 | Includes engagement ring |
+| Art Collection | Primary Residence | $40,000 | Various artists |
+| Coin Collection | Safe Deposit Box | $15,000 | Rare coins |
+
+Intellectual Property
+
+| Type | Description | Estimated Value | Notes |
+| Patents | Technology Process Patent | $75,000 | Expires 2030 |
+| Copyrights | Book Series | $15,000 | Royalty income |
+| Trademarks | Business Logo and Name | $25,000 | Registered 2018 |
+
+Transfer Status Tracking
+
+| Asset | Transfer Status | Date Completed | Notes |
+| Primary Residence | Completed | 01/15/2023 | Quitclaim deed recorded |
+| Financial Accounts | In Progress | - | Awaiting bank processing |
+| Business Interests | Not Started | - | Need attorney review |
+
+Notes:
+
+This inventory should be updated annually or whenever substantial assets are acquired or disposed of.
+
+Professional Contact Information
+
+| Role | Name | Company | Phone | Email |
+| Attorney | Jane Smith, Esq. | Smith Legal Group | (555) 123-4567 | jane@smithlegal.com |
+| Accountant | John Doe, CPA | Financial Partners | (555) 987-6543 | john@financialpartners.com |
+| Financial Advisor | Mary Johnson | Wealth Management Inc. | (555) 234-5678 | mary@wealthmgmt.com |
+| Insurance Agent | Robert Wilson | Insurance Solutions | (555) 876-5432 | robert@insurancesolutions.com |
+
+Important Dates & Deadlines
+
+| Description | Date | Notes |
+| Annual Trust Review | January 15 | Schedule with attorney |
+| Tax Filing Deadline | April 15 | Provide documents to CPA by March 1 |
+| Insurance Policy Renewal | June 30 | Review coverage amounts |
+| Business Valuation Update | September 1 | For succession planning | 
