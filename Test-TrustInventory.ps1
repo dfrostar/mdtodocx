@@ -342,9 +342,39 @@ function Format-TrustDocument {
                 
                 Write-Host "Processing heading level $headingLevel - $headingText"
                 
+                # Set heading styles with improved formatting
                 $Selection.Style = "Heading $headingLevel"
+                
+                # Format headings based on level
+                switch ($headingLevel) {
+                    1 {
+                        $Selection.Font.Size = 18
+                        $Selection.Font.Bold = $true
+                        $Selection.Font.Color = 5460735 # Dark blue
+                    }
+                    2 {
+                        $Selection.Font.Size = 16
+                        $Selection.Font.Bold = $true
+                        $Selection.Font.Color = 6710932 # Dark teal
+                    }
+                    3 {
+                        $Selection.Font.Size = 14
+                        $Selection.Font.Bold = $true
+                        $Selection.Font.Color = 10053222 # Dark gray
+                    }
+                    default {
+                        $Selection.Font.Size = 12
+                        $Selection.Font.Bold = $true
+                    }
+                }
+                
                 $Selection.TypeText($headingText)
                 $Selection.TypeParagraph()
+                
+                # Add extra space after higher level headings
+                if ($headingLevel -le 2) {
+                    $Selection.TypeParagraph()
+                }
             }
             
             "SectionHeading" {
@@ -353,6 +383,9 @@ function Format-TrustDocument {
                 Write-Host "Processing section heading: $sectionText"
                 
                 $Selection.Style = "Heading 3"
+                $Selection.Font.Size = 14
+                $Selection.Font.Bold = $true
+                $Selection.Font.Color = 10053222 # Dark gray
                 $Selection.TypeText($sectionText)
                 $Selection.TypeParagraph()
             }
@@ -446,7 +479,30 @@ function Format-TrustDocument {
                 # Create the table
                 $table = $Selection.Tables.Add($Selection.Range, $rowCount, $colCount)
                 $table.Borders.Enable = $true
-                $table.Style = "Table Grid"
+                
+                # Improved table formatting
+                $table.AllowAutoFit = $true
+                $table.Rows.Item(1).HeadingFormat = $true
+                
+                # Set spacing for cells
+                $table.Spacing = 2 # Slightly more spacing between cells
+                $table.Borders.InsideLineStyle = 1 # wdLineStyleSingle
+                $table.Borders.OutsideLineStyle = 1 # wdLineStyleSingle
+                
+                # Apply a cleaner table style
+                try {
+                    $table.Style = "Table Grid 5" # Try a different table style
+                    $table.ApplyStyleHeadingRows = $true
+                    $table.ApplyStyleLastRow = $false
+                    $table.ApplyStyleFirstColumn = $false
+                    $table.ApplyStyleLastColumn = $false
+                    $table.ApplyStyleRowBands = $true
+                    $table.ApplyStyleColumnBands = $false
+                } catch {
+                    # Fallback to standard style
+                    $table.Style = "Table Grid"
+                    Write-Host "Could not apply all table styles, using default"
+                }
                 
                 # Add headers to first row
                 for ($col = 0; $col -lt $headers.Count; $col++) {
@@ -456,8 +512,13 @@ function Format-TrustDocument {
                     }
                 }
                 
-                # Bold the header row
+                # Bold the header row and set background
                 $table.Rows.Item(1).Range.Bold = $true
+                try {
+                    $table.Rows.Item(1).Shading.BackgroundPatternColor = 15395562 # Light blue
+                } catch {
+                    Write-Host "Could not set header background color"
+                }
                 
                 # Add data rows
                 for ($row = 0; $row -lt $dataRows.Count; $row++) {
@@ -473,25 +534,12 @@ function Format-TrustDocument {
                     }
                 }
                 
-                # Set table properties for better appearance
-                $table.AllowAutoFit = $true
-                $table.AutoFitBehavior(1) # wdAutoFitContent = 1
-                
-                # Apply a cleaner table style if available
-                try {
-                    $table.Style = "Table Grid"
-                    $table.ApplyStyleHeadingRows = $true
-                    $table.ApplyStyleLastRow = $false
-                    $table.ApplyStyleFirstColumn = $false
-                    $table.ApplyStyleLastColumn = $false
-                    $table.ApplyStyleRowBands = $true
-                    $table.ApplyStyleColumnBands = $false
-                } catch {
-                    Write-Host "Could not apply all table styles"
-                }
+                # Auto-fit the table to content, then try to standardize widths
+                $table.AutoFitBehavior(1) # wdAutoFitContent
                 
                 # Add space after table
                 $Selection.TypeParagraph()
+                $Selection.TypeParagraph() # Extra spacing between tables
             }
             
             "Paragraph" {
@@ -540,10 +588,13 @@ try {
     $doc = $word.Documents.Add()
     
     # Set document properties for better formatting
-    $doc.PageSetup.LeftMargin = 72 # 1 inch in points
-    $doc.PageSetup.RightMargin = 72
+    $doc.PageSetup.LeftMargin = 36 # 0.5 inch in points
+    $doc.PageSetup.RightMargin = 36
     $doc.PageSetup.TopMargin = 72
     $doc.PageSetup.BottomMargin = 72
+    
+    # Set document to landscape for wider tables
+    $doc.PageSetup.Orientation = 1 # wdOrientLandscape
     
     # Set default font
     $word.Selection.Font.Name = "Calibri"
