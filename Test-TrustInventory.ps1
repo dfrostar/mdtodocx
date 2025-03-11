@@ -135,7 +135,23 @@ function Extract-TableHeaders {
         $headerLine = $headerLine.Substring(0, $headerLine.Length - 1)
     }
     
+    # Split by pipe character and trim each header
     $headers = $headerLine.Split('|') | ForEach-Object { $_.Trim() }
+    
+    # Filter out empty headers and ensure we have valid headers
+    $headers = $headers | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    
+    # If we have no valid headers, try to create placeholder headers
+    if ($headers.Count -eq 0) {
+        $pipeCount = ($HeaderLine.ToCharArray() | Where-Object { $_ -eq '|' } | Measure-Object).Count
+        if ($pipeCount -gt 0) {
+            $headers = @()
+            for ($i = 1; $i -le ($pipeCount + 1); $i++) {
+                $headers += "Column $i"
+            }
+        }
+    }
+    
     return $headers
 }
 
@@ -457,8 +473,22 @@ function Format-TrustDocument {
                     }
                 }
                 
-                # Auto-fit the table
-                $table.AutoFitBehavior(1) # wdAutoFitContent
+                # Set table properties for better appearance
+                $table.AllowAutoFit = $true
+                $table.AutoFitBehavior(1) # wdAutoFitContent = 1
+                
+                # Apply a cleaner table style if available
+                try {
+                    $table.Style = "Table Grid"
+                    $table.ApplyStyleHeadingRows = $true
+                    $table.ApplyStyleLastRow = $false
+                    $table.ApplyStyleFirstColumn = $false
+                    $table.ApplyStyleLastColumn = $false
+                    $table.ApplyStyleRowBands = $true
+                    $table.ApplyStyleColumnBands = $false
+                } catch {
+                    Write-Host "Could not apply all table styles"
+                }
                 
                 # Add space after table
                 $Selection.TypeParagraph()
@@ -508,6 +538,17 @@ try {
     # Initialize Word
     $word = Initialize-WordApplication -ShowWord:$ShowWord
     $doc = $word.Documents.Add()
+    
+    # Set document properties for better formatting
+    $doc.PageSetup.LeftMargin = 72 # 1 inch in points
+    $doc.PageSetup.RightMargin = 72
+    $doc.PageSetup.TopMargin = 72
+    $doc.PageSetup.BottomMargin = 72
+    
+    # Set default font
+    $word.Selection.Font.Name = "Calibri"
+    $word.Selection.Font.Size = 11
+    
     $selection = $word.Selection
     
     # Second pass: Format document in Word
