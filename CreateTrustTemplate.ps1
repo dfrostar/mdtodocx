@@ -152,6 +152,16 @@ try {
             $currentSection = Clean-SectionHeading $line
             Write-Host "Found section: $currentSection"
             
+            # Ensure we're not inside a table before adding a section heading
+            if ($word.Selection.Information(12)) { # 12 = wdWithInTable
+                Write-Host "Exiting previous table before adding new section"
+                # Move to end of the table and add paragraph
+                $word.Selection.EndOf(5, 0) # 5 = wdTable
+                $word.Selection.MoveDown()
+                $word.Selection.TypeParagraph()
+                $word.Selection.TypeParagraph() # Extra space between table and next section
+            }
+            
             # Add extra space if coming after a table
             if ($lastWasTable) {
                 $word.Selection.TypeParagraph()
@@ -222,6 +232,7 @@ try {
                             }
                             
                             # Move past the table
+                            $word.Selection.EndOf(5, 0) # 5 = wdTable
                             $word.Selection.MoveDown()
                             $word.Selection.TypeParagraph()
                             $lastWasTable = $true
