@@ -11,6 +11,9 @@ param (
 function Is-SectionHeading {
     param ([string]$Line)
     
+    # Remove markdown symbols before checking
+    $cleanLine = $Line -replace '^#+\s*', ''
+    
     # Check for common section headers in trust documents
     $sectionPatterns = @(
         "Real Estate Properties",
@@ -27,12 +30,19 @@ function Is-SectionHeading {
     )
     
     foreach ($pattern in $sectionPatterns) {
-        if ($Line -match $pattern) {
+        if ($cleanLine -match $pattern) {
             return $true
         }
     }
     
     return $false
+}
+
+# Function to clean a section heading (remove markdown symbols)
+function Clean-SectionHeading {
+    param ([string]$Line)
+    
+    return $Line -replace '^#+\s*', ''
 }
 
 # Function to check if a line contains table headers (has pipe characters)
@@ -104,6 +114,8 @@ try {
     $doc.PageSetup.Orientation = 1 # wdOrientLandscape
     $doc.PageSetup.LeftMargin = 36 # 0.5 inch
     $doc.PageSetup.RightMargin = 36
+    $doc.PageSetup.TopMargin = 36 # 0.5 inch
+    $doc.PageSetup.BottomMargin = 36 # 0.5 inch
     
     # Set default font
     $word.Selection.Font.Name = "Calibri"
@@ -118,9 +130,14 @@ try {
     $word.Selection.Font.Bold = $false
     $word.Selection.Font.Size = 11
     
+    # Define font sizes
+    $sectionHeadingSize = 14 # Section headings
+    $tableHeaderSize = 12 # Table column headers
+    
     # Process the file to find sections and table headers
     $currentSection = ""
     $table = $null
+    $lastWasTable = $false
     
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
@@ -132,28 +149,37 @@ try {
         
         # Check if this is a section heading
         if (Is-SectionHeading $line) {
-            $currentSection = $line
+            $currentSection = Clean-SectionHeading $line
             Write-Host "Found section: $currentSection"
             
-            # Add section heading
-            $word.Selection.Font.Size = 14
+            # Add extra space if coming after a table
+            if ($lastWasTable) {
+                $word.Selection.TypeParagraph()
+            }
+            
+            # Add section heading with proper formatting
+            $word.Selection.Font.Size = $sectionHeadingSize
             $word.Selection.Font.Bold = $true
+            $word.Selection.Font.Color = 5460735 # Dark blue
             $word.Selection.TypeText($currentSection)
             $word.Selection.TypeParagraph()
             $word.Selection.Font.Bold = $false
+            $word.Selection.Font.Color = 0 # Black
             $word.Selection.Font.Size = 11
             
             # Look for table headers in the next few lines
+            $foundTable = $false
             for ($j = $i + 1; $j -lt [Math]::Min($i + 5, $lines.Count); $j++) {
                 if (Has-TableHeaders $lines[$j]) {
                     $headerLine = $lines[$j]
                     $headers = Extract-Headers $headerLine
                     
                     if ($headers.Count -gt 0) {
+                        $foundTable = $true
                         Write-Host "Found table headers: $($headers -join ', ')"
                         
-                        # Create a table with these headers and 5 empty rows
-                        $rowCount = 6 # Header + 5 empty rows
+                        # Create a table with these headers and 7 empty rows
+                        $rowCount = 8 # Header + 7 empty rows
                         $colCount = $headers.Count
                         
                         # Limit to 10 columns max for safety
@@ -170,24 +196,41 @@ try {
                             $table = $word.Selection.Tables.Add($word.Selection.Range, $rowCount, $colCount)
                             $table.Borders.Enable = $true
                             
+                            # Set table properties for better display
+                            $table.Borders.InsideLineStyle = 1 # wdLineStyleSingle
+                            $table.Borders.OutsideLineStyle = 1 # wdLineStyleSingle
+                            
                             # Add headers to the first row
                             for ($col = 0; $col -lt $headers.Count -and $col -lt $colCount; $col++) {
                                 $headerText = [string]$headers[$col]  # Ensure it's a string
                                 $table.Cell(1, $col + 1).Range.Text = $headerText
-                                $table.Cell(1, $col + 1).Range.Bold = $true
+                                
+                                # Format header cell
+                                $table.Cell(1, $col + 1).Range.Font.Bold = $true
+                                $table.Cell(1, $col + 1).Range.Font.Size = $tableHeaderSize
                             }
                             
                             # Format header row
                             $table.Rows.Item(1).Shading.BackgroundPatternColor = 14277081 # Light gray
                             
+                            # Auto-fit table to content
+                            $table.AutoFitBehavior(1) # wdAutoFitContent
+                            
+                            # Ensure cell word-wrap is enabled
+                            foreach ($cell in $table.Range.Cells) {
+                                $cell.WordWrap = $true
+                            }
+                            
                             # Move past the table
                             $word.Selection.MoveDown()
                             $word.Selection.TypeParagraph()
+                            $lastWasTable = $true
                         }
                         catch {
                             Write-Host "Error creating table: $_"
                             # Just add a paragraph and continue
                             $word.Selection.TypeParagraph()
+                            $lastWasTable = $false
                         }
                         
                         # Skip ahead in the file
@@ -195,6 +238,11 @@ try {
                         break
                     }
                 }
+            }
+            
+            # If no table was found, ensure we still have proper spacing
+            if (-not $foundTable) {
+                $word.Selection.TypeParagraph()
             }
         }
     }
