@@ -11,33 +11,28 @@ if "%1"=="" (
     exit /b 1
 )
 
-set "INPUT_FILE=%1"
+set INPUT_FILE=%1
+set OUTPUT_FILE=
 
 REM Set default output file if not provided
-if "%2"=="" (
-    set "OUTPUT_FILE=%~dpn1.docx"
-) else (
-    set "OUTPUT_FILE=%2"
+if not "%2"=="" (
+    set OUTPUT_FILE=-OutputFile "%2"
 )
 
 REM Check if show parameter is provided
-set "SHOW_PARAM="
-if /i "%3"=="show" set "SHOW_PARAM=-ShowWord"
+set SHOW_PARAM=
+if /i "%3"=="show" set SHOW_PARAM=-ShowWord
 
-echo Converting: %INPUT_FILE% to %OUTPUT_FILE%
+echo Converting: %INPUT_FILE%
+if not "%OUTPUT_FILE%"=="" echo Output will be saved to: %2
 if not "%SHOW_PARAM%"=="" echo Word will be visible during conversion
 
 REM Run the PowerShell script with the provided parameters
-powershell -ExecutionPolicy Bypass -File "%~dp0Test-TrustInventory.ps1" -InputFile "%INPUT_FILE%" -OutputFile "%OUTPUT_FILE%" %SHOW_PARAM%
+powershell -ExecutionPolicy Bypass -File "%~dp0Convert-Text.ps1" -InputFile "%INPUT_FILE%" %OUTPUT_FILE% %SHOW_PARAM%
 
 if %ERRORLEVEL% neq 0 (
     echo Conversion failed with error code %ERRORLEVEL%
     exit /b %ERRORLEVEL%
 )
-
-echo.
-echo Conversion completed successfully!
-echo Output saved to: %OUTPUT_FILE%
-echo.
 
 exit /b 0 
