@@ -1,6 +1,6 @@
-# Welcome to the mdtodocx Wiki
+# Welcome to the md_txt-to_docx Wiki
 
-This tool allows you to convert Markdown (.md) and plain text (.txt) files to properly formatted Microsoft Word (.docx) documents.
+This tool allows you to convert Markdown (.md) and plain text (.txt) files to properly formatted Microsoft Word (.docx) documents, with special focus on handling tables properly.
 
 ## Quick Navigation
 
@@ -14,45 +14,49 @@ This tool allows you to convert Markdown (.md) and plain text (.txt) files to pr
 
 ## Overview
 
-The mdtodocx tool is a PowerShell-based converter that transforms Markdown and text files into well-formatted Word documents. It preserves formatting, handles tables, lists, and basic text styling.
+The md_txt-to_docx tool is a PowerShell-based converter that transforms Markdown and text files into well-formatted Word documents. It preserves formatting, handles tables, lists, and basic text styling.
 
 ## Key Features
 
 - **Multiple File Format Support**: Converts both Markdown (.md) and plain text (.txt) files
-- **Table Support**: Correctly formats and preserves tables in Word
+- **Enhanced Table Support**: Correctly formats and preserves tables in Word using pipe-delimited formats
 - **Heading Styles**: Applies appropriate Word heading styles
-- **List Formatting**: Preserves both ordered and unordered lists
-- **Text Styling**: Maintains bold, italic, and other basic text formatting
-- **Easy to Use**: Simple PowerShell script with a batch file wrapper
+- **Text Preservation**: Maintains the structure of your documents
+- **Easy to Use**: Simple PowerShell script with batch file wrappers
+- **Verbose Logging Option**: Detailed logging for troubleshooting
 
 ## Quick Start
 
 1. Clone the repository:
    ```
-   git clone https://github.com/dfrostar/mdtodocx.git
+   git clone https://github.com/dfrostar/md_txt-to_docx.git
    ```
 
 2. Run the script with your Markdown or TXT file:
-   ```powershell
-   .\Convert-MarkdownToWord.ps1 -InputFile "path\to\your\file.md" -OutputFile "path\to\output.docx"
-   ```
-   
-   Or use the batch file:
+   - Using the main script (recommended for most users):
    ```
    .\Convert-MarkdownToWord.bat path\to\your\file.txt
+   ```
+   
+   - For more control with the simplified table converter:
+   ```
+   .\Convert-TextToWord.bat path\to\your\file.txt output.docx
+   ```
+   
+   - For direct PowerShell access with verbose logging:
+   ```powershell
+   .\Convert-TxtToWord.ps1 -InputFile "path\to\your\file.txt" -OutputFile "output.docx" -Verbose
    ```
 
 ## Example
 
-Converting a text file with a table to Word:
+Converting a text file with a pipe-delimited table to Word:
 
 ```
-+----------------+----------------+---------------+
 | Column 1       | Column 2       | Column 3      |
-+----------------+----------------+---------------+
+|----------------|----------------|---------------|
 | Row 1, Cell 1  | Row 1, Cell 2  | Row 1, Cell 3 |
 | Row 2, Cell 1  | Row 2, Cell 2  | Row 2, Cell 3 |
-+----------------+----------------+---------------+
 ```
 
 Using the command:
@@ -64,9 +68,11 @@ Results in a properly formatted Word document with a styled table.
 
 ## Latest Updates
 
-- Added support for TXT files with tables
-- Improved table formatting
-- Updated batch file wrapper to support both file types
+- **New SimpleTableConverter.ps1**: A streamlined script focused on correct table processing
+- **Improved Pipe-Delimited Table Handling**: Better detection and formatting of tables
+- **New Convert-TextToWord.bat**: Additional batch wrapper for the simplified converter
+- **Enhanced Error Logging**: Better troubleshooting with the verbose logging option
+- **Updated README**: Comprehensive documentation and examples
 
 ## Requirements
 

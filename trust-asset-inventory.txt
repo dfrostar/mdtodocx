@@ -1,0 +1,108 @@
+# Trust Asset Inventory Spreadsheet Template
+
+## Instructions
+This template helps you inventory all assets to be considered for transfer to your trust. Use this to track the status of each asset and ensure nothing is overlooked in the funding process.
+
+## Asset Inventory Template
+
+### Real Estate Properties
+
+| Property Address | Current Owner(s) | Estimated Value | Mortgage Balance | Mortgage Lender | Transfer Method | Date Transferred | Notes | Status |
+|------------------|------------------|-----------------|------------------|-----------------|-----------------|------------------|-------|--------|
+| 123 Main Street | John & Jane Doe | $450,000 | $250,000 | First Bank | Warranty Deed | | Property taxes due in June | Pending |
+| | | | | | | | | |
+| | | | | | | | | |
+
+### Financial Accounts
+
+| Account Type | Institution | Account Number (Last 4) | Current Owner(s) | Balance | Beneficiary | Transfer Method | Date Transferred | Status |
+|--------------|-------------|-------------------------|------------------|---------|-------------|-----------------|------------------|--------|
+| Checking | First Bank | 1234 | John Doe | $15,000 | None | Retitle | | Pending |
+| Savings | Credit Union | 5678 | Jane Doe | $45,000 | None | Retitle | | Pending |
+| Brokerage | Fidelity | 9012 | John & Jane Doe | $250,000 | Children | Retitle | | Pending |
+| | | | | | | | | |
+| | | | | | | | | |
+
+### Retirement Accounts (Do Not Transfer Ownership - Beneficiary Only)
+
+| Account Type | Institution | Account Number (Last 4) | Current Owner | Balance | Current Beneficiary | New Beneficiary | Date Updated | Status |
+|--------------|-------------|-------------------------|---------------|---------|---------------------|-----------------|--------------|--------|
+| IRA | Vanguard | 3456 | John Doe | $325,000 | Jane Doe | Trust (Secondary) | | Pending |
+| 401(k) | Fidelity | 7890 | Jane Doe | $285,000 | John Doe | Trust (Secondary) | | Pending |
+| | | | | | | | | |
+| | | | | | | | | |
+
+### Vehicles
+
+| Make/Model | Year | VIN (Last 6) | Current Owner(s) | Estimated Value | Loan Balance | Lender | Transfer Method | Date Transferred | Status |
+|------------|------|--------------|------------------|-----------------|--------------|--------|-----------------|------------------|--------|
+| Toyota Camry | 2020 | 123456 | John Doe | $22,000 | $12,000 | Auto Bank | GA DMV Form MV-1 | | Check with lender |
+| Honda CR-V | 2022 | 789012 | Jane Doe | $30,000 | $0 | None | GA DMV Form MV-1 | | Pending |
+| | | | | | | | | | |
+
+### Life Insurance Policies
+
+| Insurance Company | Policy Number (Last 4) | Insured | Owner | Face Value | Current Beneficiary | New Beneficiary | Date Updated | Status |
+|-------------------|------------------------|---------|-------|------------|---------------------|-----------------|--------------|--------|
+| Prudential | 2468 | John Doe | John Doe | $500,000 | Jane Doe | Trust | | Pending |
+| MetLife | 1357 | Jane Doe | Jane Doe | $500,000 | John Doe | Trust | | Pending |
+| | | | | | | | | |
+
+### Business Interests
+
+| Business Name | Entity Type | Ownership % | Est. Value | Document Location | Transfer Method | Date Transferred | Status |
+|---------------|-------------|-------------|------------|-------------------|-----------------|------------------|--------|
+| Doe Consulting | LLC | 100% | $150,000 | Office safe | Amend Operating Agreement | | Pending |
+| | | | | | | | |
+| | | | | | | | |
+
+### Valuable Personal Property (Art, Jewelry, Collectibles, etc.)
+
+| Item Description | Location | Estimated Value | Appraisal Date | Insurance | Transfer Method | Date Transferred | Status |
+|------------------|----------|-----------------|----------------|-----------|-----------------|------------------|--------|
+| Diamond ring | Safe deposit box | $15,000 | 01/15/2023 | Homeowners rider | Assignment document | | Pending |
+| Art collection | Home office | $35,000 | 05/20/2022 | Separate policy | Assignment document | | Pending |
+| | | | | | | | |
+| | | | | | | | |
+
+### Intellectual Property
+
+| Type | Registration/Serial # | Description | Estimated Value | Transfer Method | Date Transferred | Status |
+|------|----------------------|-------------|-----------------|-----------------|------------------|--------|
+| Trademark | 12345678 | Company logo | Unknown | Assignment | | Pending |
+| Copyright | TX-123-456 | Book manuscript | $10,000 | Assignment | | Pending |
+| | | | | | | |
+
+## Transfer Status Tracking
+
+| Asset Category | Total Assets | Completed | In Progress | Not Started | Excluded | Notes |
+|----------------|--------------|-----------|-------------|-------------|----------|-------|
+| Real Estate | | | | | | |
+| Financial Accounts | | | | | | |
+| Retirement Accounts | | | | | | |
+| Vehicles | | | | | | |
+| Life Insurance | | | | | | |
+| Business Interests | | | | | | |
+| Valuable Personal Property | | | | | | |
+| Intellectual Property | | | | | | |
+| **TOTALS** | | | | | | |
+
+## Professional Contact Information
+
+| Role | Name | Company | Phone | Email | Notes |
+|------|------|---------|-------|-------|-------|
+| Estate Attorney | | | | | |
+| Financial Advisor | | | | | |
+| CPA/Tax Advisor | | | | | |
+| Insurance Agent | | | | | |
+| Trust Officer | | | | | |
+
+## Important Dates & Deadlines
+
+| Description | Due Date | Responsible Party | Status | Notes |
+|-------------|----------|-------------------|--------|-------|
+| Trust document signing | | | | |
+| Real estate deed filing | | | | |
+| Vehicle title transfer | | | | |
+| Annual trust review | | | | |
+| | | | | |
