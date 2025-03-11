@@ -11,6 +11,11 @@ param (
 function Is-SectionHeading {
     param ([string]$Line)
     
+    # Skip lines that contain pipe characters - these are likely table rows, not headings
+    if ($Line -match '\|') {
+        return $false
+    }
+    
     # Remove markdown symbols before checking
     $cleanLine = $Line -replace '^#+\s*', ''
     
@@ -134,6 +139,9 @@ try {
     $sectionHeadingSize = 14 # Section headings
     $tableHeaderSize = 12 # Table column headers
     
+    # Track sections we've already processed to avoid duplicates
+    $processedSections = @{}
+    
     # Process the file to find sections and table headers
     $currentSection = ""
     $table = $null
@@ -150,6 +158,16 @@ try {
         # Check if this is a section heading
         if (Is-SectionHeading $line) {
             $currentSection = Clean-SectionHeading $line
+            
+            # Skip if we've already processed this section
+            if ($processedSections.ContainsKey($currentSection)) {
+                Write-Host "Skipping duplicate section: $currentSection"
+                continue
+            }
+            
+            # Mark this section as processed
+            $processedSections[$currentSection] = $true
+            
             Write-Host "Found section: $currentSection"
             
             # Ensure we're not inside a table before adding a section heading
@@ -255,6 +273,89 @@ try {
             if (-not $foundTable) {
                 $word.Selection.TypeParagraph()
             }
+        }
+    }
+    
+    # Specifically add any important sections that might be missing
+    $coreSections = @(
+        "Professional Contact Information",
+        "Important Dates & Deadlines"
+    )
+    
+    foreach ($section in $coreSections) {
+        if (-not $processedSections.ContainsKey($section)) {
+            Write-Host "Adding missing core section: $section"
+            
+            # Ensure we're not inside a table
+            if ($word.Selection.Information(12)) { # 12 = wdWithInTable
+                $word.Selection.EndOf(5, 0) # 5 = wdTable
+                $word.Selection.MoveDown()
+                $word.Selection.TypeParagraph()
+                $word.Selection.TypeParagraph()
+            }
+            
+            # Add section heading
+            $word.Selection.Font.Size = $sectionHeadingSize
+            $word.Selection.Font.Bold = $true
+            $word.Selection.Font.Color = 5460735 # Dark blue
+            $word.Selection.TypeText($section)
+            $word.Selection.TypeParagraph()
+            $word.Selection.Font.Bold = $false
+            $word.Selection.Font.Color = 0 # Black
+            $word.Selection.Font.Size = 11
+            
+            # Add an appropriate table based on the section
+            $headers = @()
+            
+            if ($section -eq "Professional Contact Information") {
+                $headers = @("Role", "Name", "Company", "Phone", "Email", "Notes")
+            }
+            elseif ($section -eq "Important Dates & Deadlines") {
+                $headers = @("Description", "Due Date", "Responsible Party", "Status", "Notes")
+            }
+            
+            if ($headers.Count -gt 0) {
+                # Create the table
+                $rowCount = 8 # Header + 7 empty rows
+                $colCount = $headers.Count
+                
+                try {
+                    $table = $word.Selection.Tables.Add($word.Selection.Range, $rowCount, $colCount)
+                    $table.Borders.Enable = $true
+                    
+                    # Set table properties
+                    $table.Borders.InsideLineStyle = 1
+                    $table.Borders.OutsideLineStyle = 1
+                    
+                    # Add headers
+                    for ($col = 0; $col -lt $headers.Count; $col++) {
+                        $table.Cell(1, $col + 1).Range.Text = $headers[$col]
+                        $table.Cell(1, $col + 1).Range.Font.Bold = $true
+                        $table.Cell(1, $col + 1).Range.Font.Size = $tableHeaderSize
+                    }
+                    
+                    # Format header row
+                    $table.Rows.Item(1).Shading.BackgroundPatternColor = 14277081 # Light gray
+                    
+                    # Auto-fit and enable word-wrap
+                    $table.AutoFitBehavior(1)
+                    foreach ($cell in $table.Range.Cells) {
+                        $cell.WordWrap = $true
+                    }
+                    
+                    # Move past the table
+                    $word.Selection.EndOf(5, 0)
+                    $word.Selection.MoveDown()
+                    $word.Selection.TypeParagraph()
+                }
+                catch {
+                    Write-Host "Error creating table for $section"
+                    $word.Selection.TypeParagraph()
+                }
+            }
+            
+            # Mark as processed
+            $processedSections[$section] = $true
         }
     }
     
