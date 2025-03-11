@@ -1,46 +1,40 @@
 @echo off
 setlocal
 
+REM Check if input file is provided
 if "%~1"=="" (
-    echo Usage: %~nx0 input.txt [output.docx] [debug]
-    echo Specialized converter for trust inventory documents to Word format.
+    echo Usage: Convert-TrustInventory.bat input_file [output_file] [show]
     echo.
-    echo Options:
-    echo   input.txt  - Path to input trust inventory text file (required)
-    echo   output.docx - Path to output Word document (optional)
-    echo   debug      - Add this parameter to enable debug output
+    echo   input_file   - Path to the trust inventory text file
+    echo   output_file  - Optional: Path to save the Word document (default: same name with .docx)
+    echo   show         - Optional: Add this parameter to show Word during conversion
     exit /b 1
 )
 
-set "InputFile=%~1"
+set INPUT_FILE=%~1
 
-REM Determine output file name
+REM Set default output file if not provided
 if "%~2"=="" (
-    set "OutputFile=%~n1-trust.docx"
+    set OUTPUT_FILE=%~dpn1.docx
 ) else (
-    set "OutputFile=%~2"
+    set OUTPUT_FILE=%~2
 )
 
-set "DebugOption="
+REM Check if show parameter is provided
+set SHOW_PARAM=
+if /i "%~3"=="show" set SHOW_PARAM=-ShowWord
 
-if /i "%~2"=="debug" (
-    set "DebugOption=-Debug"
-    set "OutputFile=%~n1-trust.docx"
-    echo Debug mode enabled.
-) else if /i "%~3"=="debug" (
-    set "DebugOption=-Debug"
-    echo Debug mode enabled.
+REM Run the PowerShell script with the provided parameters
+powershell -ExecutionPolicy Bypass -File "%~dp0Test-TrustInventory.ps1" -InputFile "%INPUT_FILE%" -OutputFile "%OUTPUT_FILE%" %SHOW_PARAM%
+
+if %ERRORLEVEL% neq 0 (
+    echo Conversion failed with error code %ERRORLEVEL%
+    exit /b %ERRORLEVEL%
 )
 
-echo Converting Trust Inventory Document: %InputFile% to %OutputFile%
-echo Using specialized trust document understanding...
+echo.
+echo Conversion completed successfully!
+echo Output saved to: %OUTPUT_FILE%
+echo.
 
-powershell -ExecutionPolicy Bypass -File "%~dp0TrustDocConverter.ps1" -InputFile "%InputFile%" -OutputFile "%OutputFile%" %DebugOption%
-
-if %ERRORLEVEL% EQU 0 (
-    echo Conversion complete. Trust document saved at: %OutputFile%
-) else (
-    echo Conversion failed with error code %ERRORLEVEL%.
-)
-
-exit /b %ERRORLEVEL% 
+exit /b 0 
