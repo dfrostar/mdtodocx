@@ -1,114 +1,117 @@
-# Usage Guide
+# Document Converter Usage Guide
 
-This guide explains how to use the md_txt-to_docx converters to transform your text files into Word documents.
+This guide explains how to use the different document converters in this repository for various use cases.
 
-## Available Converters
+## 1. Simple Conversion (Using Batch Files)
 
-The project includes three main ways to convert your files:
+### For General Documents
 
-1. **Main Batch File** (`Convert-MarkdownToWord.bat`): The simplest option for most users
-2. **Simple Table Converter** (`Convert-TextToWord.bat`): Optimized for table handling
-3. **PowerShell Scripts** (`SimpleTableConverter.ps1` or `Convert-TxtToWord.ps1`): For advanced options
-
-## Using the Main Batch File
-
-This is the recommended option for most users:
-
-```
-.\Convert-MarkdownToWord.bat input.txt [output.docx]
+```batch
+Convert-Semantic.bat input.md output.docx
 ```
 
-### Parameters:
-- `input.txt`: Your input text file (required)
-- `output.docx`: The output Word document name (optional, defaults to same name as input with .docx extension)
+Or for more detailed logging:
 
-### Example:
-```
-.\Convert-MarkdownToWord.bat trust-asset-inventory.txt
+```batch
+Convert-Semantic.bat input.md output.docx debug
 ```
 
-This will create `trust-asset-inventory.docx` in the same directory.
+### For Trust Inventory Documents
 
-## Using the Simple Table Converter
-
-If you're working primarily with tables, use this dedicated converter:
-
-```
-.\Convert-TextToWord.bat input.txt output.docx
+```batch
+Convert-TrustInventory.bat trust-inventory.txt trust-inventory.docx
 ```
 
-### Parameters:
-- `input.txt`: Your input text file (required)
-- `output.docx`: The output Word document name (required)
+## 2. Advanced Usage (Direct PowerShell)
 
-### Example:
-```
-.\Convert-TextToWord.bat financial-data.txt financial-report.docx
-```
-
-## Using PowerShell Scripts Directly
-
-For more control, you can use the PowerShell scripts directly:
-
-### SimpleTableConverter.ps1 (Recommended)
+### General Document Converter
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\SimpleTableConverter.ps1 -InputFile "input.txt" -OutputFile "output.docx" [-ShowWord]
+# Basic usage
+powershell -ExecutionPolicy Bypass -File SemanticDocConverter.ps1 -InputFile "document.md" -OutputFile "document.docx"
+
+# With debug output and showing Word during conversion
+powershell -ExecutionPolicy Bypass -File SemanticDocConverter.ps1 -InputFile "document.md" -OutputFile "document.docx" -Debug -ShowWord
 ```
 
-### Parameters:
-- `-InputFile`: Path to your input text file (required)
-- `-OutputFile`: Path for the output Word document (required)
-- `-ShowWord`: Optional switch to show Word during conversion (helpful for debugging)
-
-### Example:
-```powershell
-powershell -ExecutionPolicy Bypass -File .\SimpleTableConverter.ps1 -InputFile "data.txt" -OutputFile "report.docx" -ShowWord
-```
-
-### Convert-TxtToWord.ps1 (With Detailed Logging)
+### Trust Document Converter
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\Convert-TxtToWord.ps1 -InputFile "input.txt" -OutputFile "output.docx" -Verbose
+# Basic usage
+powershell -ExecutionPolicy Bypass -File TrustDocConverter.ps1 -InputFile "trust-inventory.txt" -OutputFile "trust-inventory.docx"
+
+# With verbose output and showing Word during conversion
+powershell -ExecutionPolicy Bypass -File TrustDocConverter.ps1 -InputFile "trust-inventory.txt" -OutputFile "trust-inventory.docx" -Verbose -ShowWord
 ```
 
-### Parameters:
-- `-InputFile`: Path to your input text file (required)
-- `-OutputFile`: Path for the output Word document (required)
-- `-ShowWord`: Optional switch to show Word during conversion
-- `-Verbose`: Enables detailed logging to console and log file
+## 3. Input File Formats
 
-### Example:
-```powershell
-powershell -ExecutionPolicy Bypass -File .\Convert-TxtToWord.ps1 -InputFile "complex-tables.txt" -OutputFile "report.docx" -Verbose
+### Markdown Format
+
+The converter supports standard Markdown syntax:
+
+```markdown
+# Heading 1
+## Heading 2
+### Heading 3
+
+Regular paragraph with **bold** and *italic* text.
+
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |
 ```
 
-## Input File Requirements
+### Trust Inventory Format
 
-Your input file should be:
+For trust inventory documents, use a format like:
 
-1. A plain text file (.txt) or Markdown file (.md)
-2. Properly formatted with:
-   - Headings using # symbols (e.g., `# Heading 1`, `## Heading 2`)
-   - Tables using pipe-delimited format (see [Table Formatting](./Table-Formatting))
-   - Regular paragraphs with blank lines between them
+```
+Real Estate Properties
 
-## Output Options
+| Property Address | Type | Value | Notes |
+| 123 Main St, Anytown, USA | Primary Residence | $500,000 | Jointly owned with spouse |
+| 456 Beach Ave, Coastville, USA | Vacation Home | $350,000 | Mortgage of $150,000 remaining |
 
-The converter creates a standard Microsoft Word .docx file with:
+Financial Accounts
 
-- Proper heading styles applied
-- Formatted tables with borders
-- Preserved paragraph spacing
-- Auto-fitted content
+| Institution | Account Type | Account Number | Value | Beneficiary |
+| First National Bank | Checking | xxx-xxx-1234 | $25,000 | N/A |
+| Investment Firm | Brokerage | yyy-yyyy-5678 | $250,000 | Spouse |
+```
 
-## Troubleshooting
+## 4. Troubleshooting
 
-If you encounter issues:
+### Common Issues
 
-1. Try the `-Verbose` option with `Convert-TxtToWord.ps1` to get detailed logs
-2. Check the `convert_log.txt` file for error messages
-3. Verify that your input file is properly formatted
-4. Make sure Microsoft Word is properly installed on your system
+1. **Table formatting issues**: 
+   - Make sure your tables have consistent delimiters (pipes)
+   - Check that all rows have the same number of columns
 
-See the [Troubleshooting](./Troubleshooting) page for more details. 
+2. **Word automation errors**:
+   - Ensure Microsoft Word is installed and functioning
+   - Close any open Word documents before running the conversion
+
+3. **Script execution policy**:
+   - If you receive execution policy errors, run PowerShell as Administrator and execute:
+     ```powershell
+     Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+     ```
+
+### Debug Output
+
+For detailed processing information, add the `-Debug` parameter to SemanticDocConverter.ps1 or the `-Verbose` parameter to TrustDocConverter.ps1.
+
+## 5. Output Customization
+
+The converters apply standard formatting:
+- Headings use Word's built-in heading styles
+- Tables use the Table Grid style with borders
+- Text uses the Normal style
+
+To customize the output appearance, you can modify the style settings in the scripts.
+
+## 6. Examples
+
+See the `examples` directory for sample input files and their corresponding Word document outputs. 
