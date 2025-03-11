@@ -94,6 +94,41 @@ function Extract-Headers {
     return $cleanHeaders
 }
 
+# Function to ensure we're not in a table
+function Ensure-NotInTable {
+    param ($Word)
+    
+    # Check if we're in a table
+    if ($Word.Selection.Information(12)) { # 12 = wdWithInTable
+        Write-Host "Currently in a table - moving out..."
+        
+        # Try multiple methods to ensure we're completely out of the table
+        $Word.Selection.EndKey(6, 0) # 6 = wdStory - moves to end of document
+        $Word.Selection.TypeParagraph()
+        $Word.Selection.TypeParagraph()
+        
+        # Double-check we're not in a table
+        if ($Word.Selection.Information(12)) {
+            Write-Host "Still in a table after first attempt - trying alternative method..."
+            $Word.Selection.MoveRight(1, 1, 1) # Move outside the table
+            $Word.Selection.TypeParagraph()
+            $Word.Selection.TypeParagraph()
+        }
+        
+        # Final check
+        if ($Word.Selection.Information(12)) {
+            Write-Host "WARNING: Still unable to exit table. Using more aggressive method..."
+            # Create a new paragraph after the table
+            $range = $Word.Selection.Range
+            $range.MoveEnd(1, 1) # 1 = wdCharacter
+            $range.Collapse(0) # 0 = wdCollapseEnd
+            $range.InsertParagraphAfter()
+            $range.InsertParagraphAfter()
+            $range.Select()
+        }
+    }
+}
+
 # Main script
 try {
     Write-Host "Starting trust template creation..."
@@ -145,7 +180,6 @@ try {
     # Process the file to find sections and table headers
     $currentSection = ""
     $table = $null
-    $lastWasTable = $false
     
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
@@ -170,20 +204,8 @@ try {
             
             Write-Host "Found section: $currentSection"
             
-            # Ensure we're not inside a table before adding a section heading
-            if ($word.Selection.Information(12)) { # 12 = wdWithInTable
-                Write-Host "Exiting previous table before adding new section"
-                # Move to end of the table and add paragraph
-                $word.Selection.EndOf(5, 0) # 5 = wdTable
-                $word.Selection.MoveDown()
-                $word.Selection.TypeParagraph()
-                $word.Selection.TypeParagraph() # Extra space between table and next section
-            }
-            
-            # Add extra space if coming after a table
-            if ($lastWasTable) {
-                $word.Selection.TypeParagraph()
-            }
+            # Ensure we're not in a table before adding a section heading
+            Ensure-NotInTable -Word $word
             
             # Add section heading with proper formatting
             $word.Selection.Font.Size = $sectionHeadingSize
@@ -249,17 +271,17 @@ try {
                                 $cell.WordWrap = $true
                             }
                             
-                            # Move past the table
-                            $word.Selection.EndOf(5, 0) # 5 = wdTable
-                            $word.Selection.MoveDown()
+                            # This is critical - we need to move the cursor AFTER the table to avoid nesting
+                            $range = $table.Range
+                            $range.Collapse(0) # 0 = wdCollapseEnd
+                            $range.Select()
                             $word.Selection.TypeParagraph()
-                            $lastWasTable = $true
+                            $word.Selection.TypeParagraph()
                         }
                         catch {
-                            Write-Host "Error creating table: $_"
+                            Write-Host "Error creating table for $currentSection"
                             # Just add a paragraph and continue
                             $word.Selection.TypeParagraph()
-                            $lastWasTable = $false
                         }
                         
                         # Skip ahead in the file
@@ -286,13 +308,8 @@ try {
         if (-not $processedSections.ContainsKey($section)) {
             Write-Host "Adding missing core section: $section"
             
-            # Ensure we're not inside a table
-            if ($word.Selection.Information(12)) { # 12 = wdWithInTable
-                $word.Selection.EndOf(5, 0) # 5 = wdTable
-                $word.Selection.MoveDown()
-                $word.Selection.TypeParagraph()
-                $word.Selection.TypeParagraph()
-            }
+            # Ensure we're not in a table
+            Ensure-NotInTable -Word $word
             
             # Add section heading
             $word.Selection.Font.Size = $sectionHeadingSize
@@ -344,8 +361,10 @@ try {
                     }
                     
                     # Move past the table
-                    $word.Selection.EndOf(5, 0)
-                    $word.Selection.MoveDown()
+                    $range = $table.Range
+                    $range.Collapse(0) # 0 = wdCollapseEnd
+                    $range.Select()
+                    $word.Selection.TypeParagraph()
                     $word.Selection.TypeParagraph()
                 }
                 catch {
