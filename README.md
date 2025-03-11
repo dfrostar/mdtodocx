@@ -24,6 +24,9 @@ Batch wrapper for the semantic converter that simplifies command-line usage.
 ### 4. Convert-TrustInventory.bat
 Batch wrapper specifically for trust inventory documents with specialized formatting.
 
+### 5. Convert-Text.bat
+Batch wrapper for converting general text files.
+
 ## Usage
 
 ### Converting a standard Markdown file:
@@ -42,6 +45,12 @@ Convert-Semantic.bat input.txt output.docx [debug]
 
 ```batch
 Convert-TrustInventory.bat trust-inventory.txt [output.docx] [debug]
+```
+
+### Converting a text file:
+
+```batch
+Convert-Text.bat input.txt output.docx [show]
 ```
 
 ## Benefits Over Basic Conversion
@@ -72,6 +81,7 @@ MIT License
 - `TrustDocConverter.ps1` - Specialized converter for trust inventory documents
 - `Convert-Semantic.bat` - Batch wrapper for the semantic converter
 - `Convert-TrustInventory.bat` - Batch wrapper for the trust document converter
+- `Convert-Text.bat` - Batch wrapper for converting general text files
 - `run-examples.bat` - Script to run all examples at once
 - `Test-TrustInventory.ps1` - Standalone test script for trust inventory conversion
 
