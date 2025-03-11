@@ -1,14 +1,14 @@
 <#
 .SYNOPSIS
-    Converts a Markdown file to a properly formatted Microsoft Word document.
+    Converts a Markdown or TXT file to a properly formatted Microsoft Word document.
 
 .DESCRIPTION
-    This PowerShell script takes a Markdown file and converts it to a Microsoft Word document,
+    This PowerShell script takes a Markdown or TXT file and converts it to a Microsoft Word document,
     preserving tables, headings, lists, and basic formatting. It uses the Word COM object
     to create and populate the document.
 
 .PARAMETER InputFile
-    The path to the Markdown file to convert.
+    The path to the Markdown or TXT file to convert.
 
 .PARAMETER OutputFile
     The path to save the Word document to.
@@ -20,11 +20,14 @@
     .\Convert-MarkdownToWord.ps1 -InputFile "C:\path\to\markdown.md" -OutputFile "C:\path\to\output.docx"
 
 .EXAMPLE
+    .\Convert-MarkdownToWord.ps1 -InputFile "C:\path\to\data.txt" -OutputFile "C:\path\to\output.docx"
+
+.EXAMPLE
     .\Convert-MarkdownToWord.ps1 -InputFile "document.md" -OutputFile "document.docx" -ShowWord
 
 .NOTES
     Author: PowerShell Community
-    Version: 1.0
+    Version: 1.1
     Requires: PowerShell 5.1 or later, Microsoft Word
 #>
 
@@ -39,7 +42,7 @@ param (
     [switch]$ShowWord
 )
 
-function Process-Markdown {
+function Process-Document {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -59,14 +62,26 @@ function Process-Markdown {
             return
         }
         
+        # Get the file extension to determine if it's markdown or text
+        $fileExtension = [System.IO.Path]::GetExtension($InputFile).ToLower()
+        $isMarkdown = $fileExtension -eq ".md"
+        $isTxt = $fileExtension -eq ".txt"
+        
+        if (-not ($isMarkdown -or $isTxt)) {
+            Write-Error "The input file must be a Markdown (.md) or Text (.txt) file. File extension: $fileExtension"
+            return
+        }
+        
+        $fileType = if ($isMarkdown) { "Markdown" } else { "Text" }
+        
         # Get the absolute path for the output file
         $OutputFile = [System.IO.Path]::GetFullPath($OutputFile)
         
-        # Read the markdown content
-        $markdownContent = Get-Content -Path $InputFile -Raw
-        $markdownLines = Get-Content -Path $InputFile
+        # Read the document content
+        $documentContent = Get-Content -Path $InputFile -Raw
+        $documentLines = Get-Content -Path $InputFile
         
-        Write-Host "Converting $InputFile to $OutputFile..."
+        Write-Host "Converting $fileType file $InputFile to $OutputFile..."
         
         # Create a new Word application instance
         $word = New-Object -ComObject Word.Application
@@ -86,8 +101,8 @@ function Process-Markdown {
         $listType = $null # "ordered" or "unordered"
         
         # Process each line
-        for ($i = 0; $i -lt $markdownLines.Count; $i++) {
-            $line = $markdownLines[$i]
+        for ($i = 0; $i -lt $documentLines.Count; $i++) {
+            $line = $documentLines[$i]
             
             # Skip empty lines unless they indicate the end of a table
             if ([string]::IsNullOrWhiteSpace($line)) {
@@ -131,7 +146,7 @@ function Process-Markdown {
                 continue
             }
             
-            # Process table header row (| Header1 | Header2 |)
+            # Process table row (| Column1 | Column2 |)
             if ($line -match '^\s*\|(.+)\|\s*$') {
                 $cells = $matches[1] -split '\|' | ForEach-Object { $_.Trim() }
                 
@@ -346,4 +361,4 @@ function Add-Table {
 }
 
 # Execute the script
-Process-Markdown -InputFile $InputFile -OutputFile $OutputFile -ShowWord:$ShowWord 
+Process-Document -InputFile $InputFile -OutputFile $OutputFile -ShowWord:$ShowWord 

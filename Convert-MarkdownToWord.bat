@@ -2,22 +2,24 @@
 REM Convert-MarkdownToWord.bat - Wrapper for the PowerShell script
 REM This batch file makes it easier to run the PowerShell script without having to open PowerShell directly
 
-echo Markdown to Word Converter
-echo -------------------------
+echo Markdown/TXT to Word Converter
+echo ----------------------------
 echo.
 
 IF "%~1"=="" (
     echo Usage: Convert-MarkdownToWord.bat input.md [output.docx] [show]
+    echo       Convert-MarkdownToWord.bat input.txt [output.docx] [show]
     echo.
     echo Parameters:
-    echo   input.md    - Path to the input Markdown file (required)
-    echo   output.docx - Path to the output Word document (optional, defaults to same name as input)
-    echo   show        - Add this parameter to show Word during conversion (optional)
+    echo   input.md/txt - Path to the input Markdown or TXT file (required)
+    echo   output.docx  - Path to the output Word document (optional, defaults to same name as input)
+    echo   show         - Add this parameter to show Word during conversion (optional)
     echo.
     echo Examples:
     echo   Convert-MarkdownToWord.bat document.md
+    echo   Convert-MarkdownToWord.bat inventory.txt
     echo   Convert-MarkdownToWord.bat document.md result.docx
-    echo   Convert-MarkdownToWord.bat document.md result.docx show
+    echo   Convert-MarkdownToWord.bat document.txt result.docx show
     goto :EOF
 )
 
