@@ -73,6 +73,12 @@ MIT License
 - `Convert-Semantic.bat` - Batch wrapper for the semantic converter
 - `Convert-TrustInventory.bat` - Batch wrapper for the trust document converter
 - `run-examples.bat` - Script to run all examples at once
+- `Test-TrustInventory.ps1` - Standalone test script for trust inventory conversion
+
+**PowerShell Module**:
+- `DocConverter/` - PowerShell module with plugin architecture
+- `Convert-Document.ps1` - Main script using the module
+- `Convert-Document.bat` - Batch wrapper for the module script
 
 ## Input File Format
 
@@ -85,6 +91,41 @@ The input text file should use:
 | Header 1 | Header 2 | Header 3 |
 |----------|----------|----------|
 | Data 1   | Data 2   | Data 3   |
+```
+
+## Advanced Features
+
+### Plugin Architecture
+
+The PowerShell module uses a plugin-based architecture that allows:
+- Automatic detection of document types
+- Specialized converters for different document formats
+- Registering custom converters for new document types
+
+### PowerShell Module Usage
+
+```powershell
+# Import the module
+Import-Module .\DocConverter
+
+# Auto-detect the converter type
+Convert-DocumentToWord -InputFile "document.md" -OutputFile "document.docx"
+
+# Specify a particular converter
+Convert-DocumentToWord -InputFile "trust-inventory.txt" -ConverterName "TrustInventory" -ShowWord
+```
+
+### Batch File Usage
+
+```batch
+# Auto-detect converter type
+Convert-Document.bat input.md output.docx
+
+# Specify converter
+Convert-Document.bat trust-inventory.txt output.docx TrustInventory
+
+# Show Word during conversion
+Convert-Document.bat document.md output.docx show
 ```
 
 ## Example
