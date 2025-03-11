@@ -462,7 +462,7 @@ function Format-TrustDocument {
                 
                 # Determine the real number of rows and columns
                 $rowCount = 1 + $dataRows.Count # Header + data rows
-                $colCount = $headers.Count
+                $colCount = [Math]::Min($headers.Count, 6) # Limit to 6 columns to avoid display issues
                 
                 # Only create a table if we have headers and data
                 if ($rowCount -lt 2 -or $colCount -lt 1) {
@@ -476,55 +476,45 @@ function Format-TrustDocument {
                 
                 Write-Host "Creating table with $rowCount rows and $colCount columns"
                 
-                # Create the table
+                # COMPLETELY NEW TABLE APPROACH
+                # Create a basic table with simple formatting
                 $table = $Selection.Tables.Add($Selection.Range, $rowCount, $colCount)
+                
+                # Basic table properties
                 $table.Borders.Enable = $true
-                
-                # Improved table formatting
-                $table.AllowAutoFit = $true
-                $table.Rows.Item(1).HeadingFormat = $true
-                
-                # Set spacing for cells
-                $table.Spacing = 2 # Slightly more spacing between cells
-                $table.Borders.InsideLineStyle = 1 # wdLineStyleSingle
                 $table.Borders.OutsideLineStyle = 1 # wdLineStyleSingle
+                $table.Borders.InsideLineStyle = 1 # wdLineStyleSingle
                 
-                # Apply a cleaner table style
+                # Try a very basic table style - no fancy formatting
                 try {
-                    $table.Style = "Table Grid 5" # Try a different table style
-                    $table.ApplyStyleHeadingRows = $true
-                    $table.ApplyStyleLastRow = $false
-                    $table.ApplyStyleFirstColumn = $false
-                    $table.ApplyStyleLastColumn = $false
-                    $table.ApplyStyleRowBands = $true
-                    $table.ApplyStyleColumnBands = $false
-                } catch {
-                    # Fallback to standard style
                     $table.Style = "Table Grid"
-                    Write-Host "Could not apply all table styles, using default"
+                    $table.ApplyStyleHeadingRows = $true
+                } catch {
+                    Write-Host "Could not apply table style"
                 }
                 
-                # Add headers to first row
-                for ($col = 0; $col -lt $headers.Count; $col++) {
+                # Insert headers (first max 6 only)
+                for ($col = 0; $col -lt $colCount; $col++) {
                     $headerText = $headers[$col].Trim()
                     if (-not [string]::IsNullOrWhiteSpace($headerText)) {
                         $table.Cell(1, $col + 1).Range.Text = $headerText
                     }
                 }
                 
-                # Bold the header row and set background
+                # Bold the header row with light shading
                 $table.Rows.Item(1).Range.Bold = $true
                 try {
-                    $table.Rows.Item(1).Shading.BackgroundPatternColor = 15395562 # Light blue
+                    $table.Rows.Item(1).Shading.BackgroundPatternColor = 14277081 # Very light gray
                 } catch {
                     Write-Host "Could not set header background color"
                 }
                 
-                # Add data rows
-                for ($row = 0; $row -lt $dataRows.Count; $row++) {
+                # Insert data rows (first 5 rows only to avoid cluttering)
+                $maxRows = [Math]::Min($dataRows.Count, 5)
+                for ($row = 0; $row -lt $maxRows; $row++) {
                     $cells = $dataRows[$row]
                     
-                    for ($col = 0; $col -lt [Math]::Min($cells.Count, $colCount); $col++) {
+                    for ($col = 0; $col -lt $colCount; $col++) {
                         if ($col -lt $cells.Count) {
                             $cellText = $cells[$col].Trim()
                             if (-not [string]::IsNullOrWhiteSpace($cellText)) {
@@ -534,12 +524,12 @@ function Format-TrustDocument {
                     }
                 }
                 
-                # Auto-fit the table to content, then try to standardize widths
-                $table.AutoFitBehavior(1) # wdAutoFitContent
+                # Auto-fit to window
+                $table.AutoFitBehavior(2) # wdAutoFitWindow
                 
                 # Add space after table
                 $Selection.TypeParagraph()
-                $Selection.TypeParagraph() # Extra spacing between tables
+                $Selection.TypeParagraph()
             }
             
             "Paragraph" {
@@ -596,9 +586,13 @@ try {
     # Set document to landscape for wider tables
     $doc.PageSetup.Orientation = 1 # wdOrientLandscape
     
-    # Set default font
-    $word.Selection.Font.Name = "Calibri"
+    # Use a reliable font
+    $word.Selection.Font.Name = "Arial"
     $word.Selection.Font.Size = 11
+    
+    # Set the page background color to white to ensure good contrast
+    $doc.Background.Fill.Visible = $true
+    $doc.Background.Fill.ForeColor.RGB = 16777215 # White
     
     $selection = $word.Selection
     
