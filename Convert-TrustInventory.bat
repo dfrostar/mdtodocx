@@ -11,18 +11,21 @@ if "%~1"=="" (
     exit /b 1
 )
 
-set INPUT_FILE=%~1
+set "INPUT_FILE=%~1"
 
 REM Set default output file if not provided
 if "%~2"=="" (
-    set OUTPUT_FILE=%~dpn1.docx
+    set "OUTPUT_FILE=%~dpn1.docx"
 ) else (
-    set OUTPUT_FILE=%~2
+    set "OUTPUT_FILE=%~2"
 )
 
 REM Check if show parameter is provided
-set SHOW_PARAM=
-if /i "%~3"=="show" set SHOW_PARAM=-ShowWord
+set "SHOW_PARAM="
+if /i "%~3"=="show" set "SHOW_PARAM=-ShowWord"
+
+echo Converting: %INPUT_FILE% to %OUTPUT_FILE%
+if not "%SHOW_PARAM%"=="" echo Word will be visible during conversion
 
 REM Run the PowerShell script with the provided parameters
 powershell -ExecutionPolicy Bypass -File "%~dp0Test-TrustInventory.ps1" -InputFile "%INPUT_FILE%" -OutputFile "%OUTPUT_FILE%" %SHOW_PARAM%
